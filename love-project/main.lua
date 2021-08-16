@@ -8,9 +8,40 @@ local gamestates = require 'src.gamestates'
 
 local WINDOW_SCALE = 4 -- Window multiplier.
 local Context      = SimpleECS.Context()
-local Camera       = Camera.new()
+local camera       = Camera.new()
+
+-- Exposing camera to systems.
+Context.camera = camera
+
+local level = {
+    { 0, 0, 0, 0, 0, 0, 0, 0 },
+    { 0, 0, 0, 4, 0, 0, 0, 0 },
+    { 0, 0, 2, 3, 0, 0, 0, 0 },
+    { 0, 0, 2, 2, 2, 3, 1, 0 },
+    { 0, 4, 2, 3, 3, 4, 0, 0 },
+    { 0, 0, 0, 0, 2, 0, 0, 0 },
+    { 0, 0, 0, 0, 4, 0, 0, 0 },
+    { 0, 0, 0, 0, 0, 0, 0, 0 },
+}
+
+local loadMap = function(map)
+    local height, width = #map, #map[1]
+
+    for y = 1, height do
+        for x = 1, width do
+            -- Tile values double as their sprite's position in the atlas.
+            local tile = map[y][x]
+            local quad = love.graphics.newQuad(tile * 16, 0, 16, 16, 128, 16)
+
+            local entity = Context:entity()
+            Context:give(entity, 'position', (x - 1) * 16, (y - 1) * 16)
+            Context:give(entity, 'sprite', quad)
+        end
+    end
+end
 
 function love.load()
+    love.graphics.setDefaultFilter('nearest', 'nearest')
     -- Getting window settings from conf.
     local game_width, game_height, flags = love.window.getMode()
     local window_width, window_height    = game_width * WINDOW_SCALE,
@@ -29,9 +60,14 @@ function love.load()
 
     Context:registerComponents(Components)
     Context:registerSystems(Systems)
+
+    loadMap(level)
+
+    Context:emit('init')
 end
 
 function love.update(delta)
+    Context:flush()
     Context:emit('update', delta)
 end
 

@@ -1,6 +1,6 @@
 local component = {
     'sprite',
-    function() return {} end
+    function(quad) return quad end
 }
 
 return component
