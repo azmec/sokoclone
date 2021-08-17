@@ -13,8 +13,8 @@ Map.__mt = { __index = Map }
 
 Map.new = function(data)
     return setmetatable({
-        data   = data
-        height = #data
+        data   = data,
+        height = #data,
         width  = #data[1]
     }, Map.__mt)
 end
@@ -34,15 +34,18 @@ function Map:isGoal(x, y)  return self.data[y][x] == GOAL  end
 function Map:set(x, y, i) self.data[y][x] = i end
 
 function Map:cells()
-    local x, y = 0, 0
+    local x, y = 0, 1
 
     return function()
-        if x > self.width then x = 0 y = y + 1 end
-        if y <= self.height then return x, y end
+        if x >= self.width then x = 0 y = y + 1 end
+        if y <= self.height then
+            x = x + 1
+            return x, y
+        end
     end
 end
 
-return setmetatabel(Map, {
+return setmetatable(Map, {
     __call = function(_, ...)
         return Map.new(...)
     end
