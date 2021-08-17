@@ -36,10 +36,34 @@ local function loadDirectory(path, t)
     return t
 end
 
+local function generateQuad(index)
+    return love.graphics.newQuad(index * TILE_SIZE, 0, TILE_SIZE, TILE_SIZE, ATLAS_WIDTH, ATLAS_HEIGHT)
+end
+
 local function loadMap(data)
     local map = Map(data)
     for x, y in map:cells() do
-        print(x, y)
+        local entity = Context:entity()
+        local sprite = generateQuad(map:getValue(x, y))
+        Context:give(entity, 'position', (x - 1) * TILE_SIZE, (y - 1) * TILE_SIZE)
+        Context:give(entity, 'sprite', sprite)
+
+        if map:isPlayer(x, y) then
+            Context:give(entity, 'input', {
+                controls = {
+                    left  = {'key:left', 'key:a'},
+                    right = {'key:right', 'key:d'},
+                    up    = {'key:up', 'key:w'},
+                    down  = {'key:down', 'key:s'}
+                },
+                pairs = {
+                    move = {'left', 'right', 'up', 'down'}
+                }
+            })
+        end
+
+        if map:isBox(x, y) then Context:give(entity, 'pushable') end
+        if map:isWall(x, y) then Context:give(entity, 'wall') end
     end
 end
 
@@ -55,6 +79,10 @@ function level:init()
     loadMap(maps.sunrise)
 
     Context.camera:lookAt(4 * 16, 4 * 16)
+
+    Context:createGroup('boxes', 'position', 'pushable')
+    Context:createGroup('walls', 'position', 'wall')
+
     Context:emit('init')
 end
 

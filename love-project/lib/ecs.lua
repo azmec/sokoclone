@@ -493,6 +493,8 @@ Context.new = function()
         components      = {},                -- Table of componentIDs, with component names as keys.
         signatures      = {},                -- Array of signatures, with entity IDs as indices.
         systems         = {},                -- Array of Systems.
+        groups          = {},                -- Array of Groups.
+        group_index     = {},                -- Table of group IDs, with group names as keys.
         entityIndex     = EntityIndex.new(), -- All living entities and past entities.
         dirty           = SparseSet.new(),   -- Set of entities who we have marked dirty.
         toDelete        = SparseSet.new(),   -- Entities queued to be deleted.
@@ -563,13 +565,15 @@ end
 function Context:flush()
     -- Check relevant lists. If they're empty, nothing to flush.
     if self.dirty:size() == 0 and self.toDelete:size() == 0 then return end
-    local dirty, to_add, toDelete  = self.dirty, self.to_add, self.toDelete
+    local dirty, to_add, toDelete   = self.dirty, self.to_add, self.toDelete
     local componentSets, components = self.componentSets, components
     local systems, signatures       = self.systems, self.signatures
+    local groups                    = self.groups
 
     -- Process entities who have been removed from the Context.
     for entity in toDelete:elements() do
         for i = 1, #systems do systems[i]:remove(entity) end
+        for i = 1, #groups do groups[i]:remove(entity) end
         for i = 1, #componentSets do componentSets[i]:destroy(entity) end
         signatures[entity] = nil
 
@@ -582,6 +586,7 @@ function Context:flush()
     for entity in dirty:elements() do
         local signature = signatures[entity]
         for i = 1, #systems do systems[i]:evaluate(entity, signature) end
+        for i = 1, #groups do groups[i]:evaluate(entity, signature) end
     end
     dirty:clear()
 end
@@ -645,6 +650,21 @@ function Context:createComponent(name, constructor)
     checkType(name, 'string', 1) checkType(constructor, 'function', 2)
     ensure(not self.componentSets[name], 'Component has already been registered with the Context!')
     self:registerComponent({name, constructor})
+end
+
+function Context:createGroup(name, ...)
+    local group   = System.new(...)
+    group.context = self
+    group.filter  = Filter.new(self.components, unpack(group.required))
+    for entity in self:entities() do
+        group:evaluate(entity, self.signatures[entity])
+    end
+
+    local id               = #self.groups + 1
+    self.groups[id]        = group
+    self.group_index[name] = id
+
+    return group
 end
 
 --- Emits the given event.
@@ -751,6 +771,11 @@ function Context:hasSystem(system)
     end
 
     return false
+end
+
+function Context:getGroup(name)
+    local id = self.group_index[name]
+    return self.groups[id]
 end
 
 --- Returns the count of components registered with the Context.
