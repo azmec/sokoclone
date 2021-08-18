@@ -9,8 +9,8 @@ Scribbles of game and system development.
 - [x] Grid-based collisions (08-17-21)
 
 ### The Good Stuff
-- [ ] Registering goals. (08-18-21)
-- [ ] Cloning the player.
+- [x] Registering goals. (08-18-21)
+- [x] Cloning the player. (08-18-21)
 - [ ] Tracking and displaying level stats.
 - [ ] Tweened movement.
 

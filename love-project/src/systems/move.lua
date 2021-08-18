@@ -1,12 +1,14 @@
-local SimpleECS = require 'lib.ecs'
+--- Moves the player(s) based on input position of boxes and walls.
+-- Supah messy, but it works. TODO: Clean up.
 
+local SimpleECS  = require 'lib.ecs'
 local moveSystem = SimpleECS.System('position', 'input')
-local Context
-local COOLDOWN   = 0.2
-local moveTimer = 0.2
-local boxes
-local walls
 
+local COOLDOWN  = 0.125
+local moveTimer = 0.0
+
+local Context
+local boxes, walls
 
 function moveSystem:init()
     Context = self.context
@@ -15,11 +17,11 @@ function moveSystem:init()
 end
 
 function moveSystem:update(delta)
-    for entity in self.pool:elements() do
-        local x_input, y_input = Context:getComponent(entity, 'input'):get('move')
-        local position         = Context:getComponent(entity, 'position')
+    local x_input, y_input = Context.input:get('move')
+    moveTimer              = moveTimer - delta
 
-        moveTimer = moveTimer - delta
+    for entity in self.pool:elements() do
+        local position = Context:getComponent(entity, 'position')
 
         local new_x, new_y = position.x, position.y
         if moveTimer <= 0 and (x_input ~= 0 or y_input ~= 0) then
@@ -54,17 +56,17 @@ function moveSystem:update(delta)
                 if can_move then
                     box_pos.x = new_box_x
                     box_pos.y = new_box_y
-                    break
                 end
             end
         end
 
         if can_move then
             position.x, position.y = new_x, new_y
-            moveTimer = COOLDOWN
         end
         end
     end
+
+    if moveTimer <= 0 and (x_input ~= 0 or y_input ~= 0) then moveTimer = COOLDOWN end
 end
 
 return moveSystem
