@@ -28,6 +28,9 @@ local ATLAS        = love.graphics.newImage('assets/atlas.png')
 local ATLAS_WIDTH  = ATLAS:getWidth()
 local ATLAS_HEIGHT = ATLAS:getHeight()
 
+local FONT        = love.graphics.newFont('assets/bitty.ttf', 16)
+local FONT_HEIGHT = FONT:getHeight('A')
+
 local function loadDirectory(path, t)
     local info = love.filesystem.getInfo(path)
     if info == nil or info.type ~= 'directory' then
@@ -82,6 +85,8 @@ local function loadMap(data)
 end
 
 function level:init()
+    love.graphics.setFont(FONT)
+
     -- Retrieving all components and systems in single tables.
     local Components = SimpleECS.utils.packDirectory('src/components', {})
     local Systems    = SimpleECS.utils.packDirectory('src/systems', {})
@@ -94,6 +99,13 @@ function level:init()
 
     local width, height = Context.map:getWidth() * TILE_SIZE, Context.map:getHeight() * TILE_SIZE
     Context.camera:lookAt(width / 2, height / 2)
+
+    Context.stats = {
+        moves  = 0,
+        time   = 0,
+        pushes = 0,
+        level  = 0
+    }
 
     Context:createGroup('boxes', 'position', 'pushable')
     Context:createGroup('walls', 'position', 'wall')
@@ -114,12 +126,26 @@ end
 
 function level:update(delta)
     Context.input:update(delta)
+    Context.stats.time = Context.stats.time + delta
+
     Context:flush()
     Context:emit('update', delta)
 end
 
 function level:draw()
     Context:emit('draw')
+
+    local msg = "Level: " .. tostring(Context.stats.level)
+    love.graphics.print(msg, 10, 10)
+
+    msg = "Moves: " .. tostring(Context.stats.moves)
+    love.graphics.print(msg, 10, 10 + FONT_HEIGHT / 2)
+
+    msg = "Pushes: " .. tostring(Context.stats.pushes)
+    love.graphics.print(msg, 10, 10 + FONT_HEIGHT)
+
+    msg = "Time: " .. tostring(math.floor(Context.stats.time))
+    love.graphics.print(msg, 10, 10 + FONT_HEIGHT * 1.5)
 end
 
 function level:keypressed(key, scancode, isrepeat)

@@ -7,11 +7,12 @@ local moveSystem = SimpleECS.System('position', 'input')
 local COOLDOWN  = 0.125
 local moveTimer = 0.0
 
-local Context
+local Context, stats
 local boxes, walls
 
 function moveSystem:init()
     Context = self.context
+    stats   = Context.stats
     boxes   = Context:getGroup('boxes')
     walls   = Context:getGroup('walls')
 end
@@ -54,14 +55,16 @@ function moveSystem:update(delta)
                 end
 
                 if can_move then
-                    box_pos.x = new_box_x
-                    box_pos.y = new_box_y
+                    box_pos.x    = new_box_x
+                    box_pos.y    = new_box_y
+                    stats.pushes = stats.pushes + 1
                 end
             end
         end
 
         if can_move then
             position.x, position.y = new_x, new_y
+            stats.moves            = stats.moves + 1
         end
         end
     end

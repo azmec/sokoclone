@@ -11,7 +11,7 @@ Scribbles of game and system development.
 ### The Good Stuff
 - [x] Registering goals. (08-18-21)
 - [x] Cloning the player. (08-18-21)
-- [ ] Tracking and displaying level stats.
+- [x] Tracking and displaying level stats. (08-18-21)
 - [ ] Tweened movement.
 
 ### The Annoying Stuff
@@ -19,6 +19,9 @@ Scribbles of game and system development.
 - [ ] Main Menu
 - [ ] Level Selection
 - [ ] Level Editor
+
+### The Bad Stuff
+- [ ] Fix player moving diagonally.
 
 ## Grid Based Movement
 Grids can be thought of likeso:
