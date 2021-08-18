@@ -2,11 +2,23 @@
 Scribbles of game and system development.
 
 ## To-do
-- [ ] Conceptualizing the Grid
-- [ ] Drawing the Grid and Player
-- [ ] Grid-based movement.
-- [ ] Grid-based collisions.
-- [ ] Grid-based collisions.
+### The Boring Stuff
+- [x] Conceptualizing the Grid (08-16-21)
+- [x] Drawing the Grid and Player (08-16-21)
+- [x] Grid-based movement (08-17-21)
+- [x] Grid-based collisions (08-17-21)
+
+### The Good Stuff
+- [ ] Registering goals. (08-18-21)
+- [ ] Cloning the player.
+- [ ] Tracking and displaying level stats.
+- [ ] Tweened movement.
+
+### The Annoying Stuff
+- [ ] Win Screen
+- [ ] Main Menu
+- [ ] Level Selection
+- [ ] Level Editor
 
 ## Grid Based Movement
 Grids can be thought of likeso:
