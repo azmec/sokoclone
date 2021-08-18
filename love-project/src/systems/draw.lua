@@ -1,6 +1,6 @@
-local SimpleECS = require 'lib.ecs'
-
-local drawSystem = SimpleECS.System('sprite', 'position')
+local deep       = require 'lib.deep'
+local SimpleECS  = require 'lib.ecs'
+local drawSystem = SimpleECS.System('sprite', 'position', 'layer')
 
 local atlas = love.graphics.newImage('assets/atlas.png')
 
@@ -14,12 +14,15 @@ end
 function drawSystem:draw()
     camera:attach(0, 0, 320, 180)
 
-    for entity in self.pool:elements() do
+    for entity in self:entities() do
+        local layer    = Context:getComponent(entity, 'layer')
         local position = Context:getComponent(entity, 'position')
         local sprite   = Context:getComponent(entity, 'sprite')
 
-        love.graphics.draw(atlas, sprite, position.x, position.y)
+        deep.queue(layer, love.graphics.draw, atlas, sprite, position.x, position.y)
     end
+
+    deep.execute()
 
     camera:detach()
 end

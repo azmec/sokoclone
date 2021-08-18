@@ -48,9 +48,15 @@ local function loadMap(data)
         Context:give(entity, 'position', (x - 1) * TILE_SIZE, (y - 1) * TILE_SIZE)
         Context:give(entity, 'sprite', sprite)
 
-        if map:isWall(x, y) then Context:give(entity, 'wall')
-        elseif map:isBox(x, y) then Context:give(entity, 'pushable')
-        elseif map:isGoal(x, y) then Context:give(entity, 'goal')
+        if map:isWall(x, y) then
+            Context:give(entity, 'wall')
+            Context:give(entity, 'layer', 1)
+        elseif map:isBox(x, y) then
+            Context:give(entity, 'pushable')
+            Context:give(entity, 'layer', 3)
+        elseif map:isGoal(x, y) then
+            Context:give(entity, 'goal')
+            Context:give(entity, 'layer', 2)
         elseif map:isPlayer(x, y) then
             Context:give(entity, 'input', {
                 controls = {
@@ -63,6 +69,7 @@ local function loadMap(data)
                     move = {'left', 'right', 'up', 'down'}
                 }
             })
+            Context:give(entity, 'layer', 4)
         end
     end
 end
