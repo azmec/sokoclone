@@ -774,6 +774,8 @@ function Context:hasSystem(system)
 end
 
 function Context:getGroup(name)
+    checkType(name, 'string', 1)
+    ensure(self.group_index[name], "Group '" .. name .. "' not registered!")
     local id = self.group_index[name]
     return self.groups[id]
 end

@@ -5,6 +5,8 @@ local Camera    = require 'lib.hump.camera'
 local Baton     = require 'lib.baton'
 local Map       = require 'src.map'
 
+local write = require 'src.write'
+
 local MAPS_PATH = 'src/maps'
 
 local level = {}
@@ -60,7 +62,7 @@ local function loadMap(data)
     for x, y in map:cells() do
         local entity = Context:entity()
         local sprite = generateQuad(map:getValue(x, y))
-        Context:give(entity, 'position', (x - 1) * TILE_SIZE, (y - 1) * TILE_SIZE)
+        Context:give(entity, 'position', x * TILE_SIZE, y * TILE_SIZE)
         Context:give(entity, 'sprite', sprite)
 
         if map:isWall(x, y) then
@@ -111,6 +113,7 @@ function level:init()
     Context:createGroup('walls', 'position', 'wall')
     Context:createGroup('goals', 'position', 'goal')
     Context:createGroup('players', 'position', 'input')
+    Context:createGroup('duplicators', 'position', 'duplicator')
 
     Context:emit('init')
 end
@@ -152,6 +155,7 @@ function level:keypressed(key, scancode, isrepeat)
 end
 
 function level:keyreleased(key, scancode)
+    if key == 'space' then write.serialize(Context) end
 end
 
 function level:quit()

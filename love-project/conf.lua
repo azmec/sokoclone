@@ -1,5 +1,5 @@
 function love.conf(t)
-    t.identity = nil
+    t.identity = 'sokoclone/levels'
     t.version  = '11.3'
     t.console  = true
 
