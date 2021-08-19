@@ -24,6 +24,23 @@ local function generateQuad(index)
     return love.graphics.newQuad(index * TILE_SIZE, 0, TILE_SIZE, TILE_SIZE, ATLAS_WIDTH, ATLAS_HEIGHT)
 end
 
+local function levelToString(level)
+    local width, height = #level[1], #level
+
+    local data = "return {\n"
+    for y = 1, height do
+        data = data .. "    { "
+        for x = 1, width do
+            data = data .. string.format(" %i,", level[y][x])
+        end
+        data = data .. " },\n"
+    end
+
+    data = data .. "}"
+
+    return data
+end
+
 --- Writes a Context's Sokoclone level data to the given file path.
 -- Touches a new file if it doesn't exist already.
 write.serialize = function(Context, path)
@@ -135,5 +152,7 @@ write.read = function(Context, path)
 
     return map
 end
+
+write.tostring = levelToString
 
 return write

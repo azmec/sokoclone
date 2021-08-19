@@ -40,7 +40,7 @@ function love.load()
                      })
 
     local levels = loadDirectory('src/maps', {})
-    Gamestate.switch(gamestates.editor, levels.sunrise)
+    Gamestate.switch(gamestates.editor, 'test.lua')
 end
 
 function love.update(delta)

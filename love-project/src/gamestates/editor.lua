@@ -1,6 +1,7 @@
 --- Level editor gamestate. Allows the user to edit levels 5head.
 
-local Map = require 'src.map'
+local Map   = require 'src.map'
+local write = require 'src.write'
 
 local Editor = {}
 
@@ -12,6 +13,9 @@ local ATLAS_HEIGHT = ATLAS:getHeight()
 local FONT        = love.graphics.newFont('assets/bitty.ttf', 16)
 local FONT_HEIGHT = FONT:getHeight('A')
 
+local LEVEL_NAME   = ''
+local CURRENT_TILE = 0
+
 local mouse = {
     x  = 0,
     y  = 0,
@@ -19,7 +23,6 @@ local mouse = {
     dy = 0
 }
 
-local CURRENT_TILE = 0
 
 local function clamp(x, lo, hi) return math.min(math.max(lo, x), hi) end
 
@@ -30,10 +33,15 @@ end
 function Editor:init()
 end
 
-function Editor:enter(previous, level)
+function Editor:enter(previous, level_path)
     love.graphics.setFont(FONT)
 
-    self.map    = Map(level)
+    local level, message = love.filesystem.load(level_path)
+    if not level then error(message) end
+
+    LEVEL_NAME = level_path
+
+    self.map    = Map(level())
     self.canvas = {}
 
     for x, y in self.map:cells() do
@@ -62,24 +70,33 @@ function Editor:draw()
 
     love.graphics.rectangle('fill', mouse.x, mouse.y, 4, 4)
 
-    local cx, cy = mouse.x / TILE_SIZE, mouse.y / TILE_SIZE
-    local msg = string.format('Mouse: (%i, %i)', cx, cy)
+    local msg = "Current level: " .. LEVEL_NAME
     love.graphics.print(msg, 320 / 2, 10)
 
+    local cx, cy = mouse.x / TILE_SIZE, mouse.y / TILE_SIZE
+    local msg = string.format('Mouse: (%i, %i)', cx, cy)
+    love.graphics.print(msg, 320 / 2, 20)
+
     local msg = string.format('Selected tile: %i', CURRENT_TILE)
-    love.graphics.print(msg, 320 / 2, 10 + (FONT_HEIGHT / 2))
+    love.graphics.print(msg, 320 / 2, 20 + (FONT_HEIGHT / 2))
 
     local msg = string.format('Save: j')
-    love.graphics.print(msg, 320 / 2, 10 + (FONT_HEIGHT * 1.5))
+    love.graphics.print(msg, 320 / 2, 20 + (FONT_HEIGHT * 1.5))
 
     local msg = string.format('Play: k')
-    love.graphics.print(msg, 320 / 2, 10 + (FONT_HEIGHT * 2))
+    love.graphics.print(msg, 320 / 2, 20 + (FONT_HEIGHT * 2))
 end
 
 function Editor:keypressed(key, scancode, isrepeat)
 end
 
 function Editor:keyreleased(key, scancode)
+    if key == 'j' then
+        local data = write.tostring(self.map.data)
+        local success, message = love.filesystem.write(LEVEL_NAME, data)
+        if not success then error(message) end
+    elseif key == 'k' then
+    end
 end
 
 function Editor:mousepressed(x, y, button)
