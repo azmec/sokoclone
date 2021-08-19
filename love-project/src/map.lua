@@ -18,13 +18,23 @@ Map.new = function(data)
     }, Map.__mt)
 end
 
+-- Easy getters and checkers.
 function Map:getValue(x, y)     return self.data[y][x] end
 function Map:isWall(x, y)       return self.data[y][x] == WALL   end
 function Map:isPlayer(x, y)     return self.data[y][x] == PLAYER end
-function Map:isEmpty(x, y)      return self.data[y][x] == FLOOR  end
+function Map:isFloor(x, y)      return self.data[y][x] == FLOOR  end
 function Map:isBox(x, y)        return self.data[y][x] == BOX    end
 function Map:isGoal(x, y)       return self.data[y][x] == GOAL   end
 function Map:isDuplicator(x, y) return self.data[y][x] == DUPLICATOR end
+
+-- Easy setters.
+function Map:setValue(x, y, i)   self.data[y][x] = i          end
+function Map:setWall(x, y)       self.data[y][x] = WALL       end
+function Map:setPlayer(x, y)     self.data[y][x] = PLAYER     end
+function Map:setFloor(x, y)      self.data[y][x] = FLOOR      end
+function Map:setBox(x, y)        self.data[y][x] = BOX        end
+function Map:setGoal(x, y)       self.data[y][x] = GOAL       end
+function Map:setDuplicator(x, y) self.data[y][x] = DUPLICATOR end
 
 function Map:getWidth()  return self.width  end
 function Map:getHeight() return self.height end

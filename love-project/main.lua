@@ -5,6 +5,26 @@ local gamestates = require 'src.gamestates'
 
 local WINDOW_SCALE = 4 -- Window multiplier.
 
+local function loadDirectory(path, t)
+    local info = love.filesystem.getInfo(path)
+    if info == nil or info.type ~= 'directory' then
+        error("bad argument #1 to 'loadDirectory' (path '".. path .."' not found)", 2)
+    end
+
+    local files = love.filesystem.getDirectoryItems(path)
+
+    for i = 1, #files do
+        local file      = files[i]
+        local name      = file:sub(1, #file - 4) -- #'.lua'
+        local file_path = path .. '.' .. name
+        local value     = require(file_path)
+
+        t[name] = value
+    end
+
+    return t
+end
+
 function love.load()
     love.graphics.setDefaultFilter('nearest', 'nearest')
     -- Getting window settings from conf.
@@ -19,7 +39,8 @@ function love.load()
                          pixelperfect = true
                      })
 
-    Gamestate.switch(gamestates.level)
+    local levels = loadDirectory('src/maps', {})
+    Gamestate.switch(gamestates.editor, levels.sunrise)
 end
 
 function love.update(delta)
@@ -40,6 +61,26 @@ end
 
 function love.keyreleased(key, scancode)
     Gamestate.keyreleased(key, scancode)
+end
+
+function love.mousepressed(x, y, button)
+    x, y = push:toGame(x, y)
+    Gamestate.mousepressed(x, y, button)
+end
+
+function love.mousereleased(x, y, button)
+    x, y = push:toGame(x, y)
+    Gamestate.mousereleased(x, y, button)
+end
+
+function love.mousemoved(x, y, dx, dy)
+    x, y   = push:toGame(x, y)
+    dx, dy = push:toGame(dx, dy)
+    Gamestate.mousemoved(x, y, dx, dy)
+end
+
+function love.wheelmoved(x, y)
+    Gamestate.wheelmoved(x, y)
 end
 
 function love.resize(width, height)

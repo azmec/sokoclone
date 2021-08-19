@@ -18,6 +18,7 @@ Scribbles of game and system development.
 - [ ] Win Screen
 - [ ] Main Menu
 - [ ] Level Selection
+- [x] Reading/writing level data. (08-19-21)
 - [ ] Level Editor
 
 ### The Bad Stuff
