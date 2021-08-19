@@ -115,6 +115,9 @@ function level:init()
     Context:createGroup('players', 'position', 'input')
     Context:createGroup('duplicators', 'position', 'duplicator')
 
+    -- Catch-all for all sokoclone entities.
+    Context:createGroup('sokoclone', 'position', 'sprite')
+
     Context:emit('init')
 end
 
@@ -155,7 +158,8 @@ function level:keypressed(key, scancode, isrepeat)
 end
 
 function level:keyreleased(key, scancode)
-    if key == 'space' then write.serialize(Context) end
+    if key == 'j' then write.serialize(Context) end
+    if key == 'k' then write.read(Context, 'test.lua') end
 end
 
 function level:quit()
