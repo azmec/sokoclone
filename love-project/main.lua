@@ -40,7 +40,7 @@ function love.load()
                      })
 
     local levels = loadDirectory('src/maps', {})
-    Gamestate.switch(gamestates.editor, 'test.lua')
+    Gamestate.switch(gamestates.level, 'test.lua')
 end
 
 function love.update(delta)
@@ -60,6 +60,8 @@ function love.keypressed(key, scancode, isrepeat)
 end
 
 function love.keyreleased(key, scancode)
+    if key == 'space' then Gamestate.switch(gamestates.editor, 'test.lua')
+    elseif key == 'k' then Gamestate.switch(gamestates.level, 'test.lua') end
     Gamestate.keyreleased(key, scancode)
 end
 

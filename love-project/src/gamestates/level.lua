@@ -7,8 +7,6 @@ local Map       = require 'src.map'
 
 local write = require 'src.write'
 
-local MAPS_PATH = 'src/maps'
-
 local level = {}
 
 local Context  = SimpleECS.Context()
@@ -26,65 +24,9 @@ Context.input  = Baton.new({
 })
 
 local TILE_SIZE    = 16
-local ATLAS        = love.graphics.newImage('assets/atlas.png')
-local ATLAS_WIDTH  = ATLAS:getWidth()
-local ATLAS_HEIGHT = ATLAS:getHeight()
 
 local FONT        = love.graphics.newFont('assets/bitty.ttf', 16)
 local FONT_HEIGHT = FONT:getHeight('A')
-
-local function loadDirectory(path, t)
-    local info = love.filesystem.getInfo(path)
-    if info == nil or info.type ~= 'directory' then
-        error("bad argument #1 to 'loadDirectory' (path '".. path .."' not found)", 2)
-    end
-
-    local files = love.filesystem.getDirectoryItems(path)
-
-    for i = 1, #files do
-        local file      = files[i]
-        local name      = file:sub(1, #file - 4) -- #'.lua'
-        local file_path = path .. '.' .. name
-        local value     = require(file_path)
-
-        t[name] = value
-    end
-
-    return t
-end
-
-local function generateQuad(index)
-    return love.graphics.newQuad(index * TILE_SIZE, 0, TILE_SIZE, TILE_SIZE, ATLAS_WIDTH, ATLAS_HEIGHT)
-end
-
-local function loadMap(data)
-    local map = Map(data)
-    for x, y in map:cells() do
-        local entity = Context:entity()
-        local sprite = generateQuad(map:getValue(x, y))
-        Context:give(entity, 'position', x * TILE_SIZE, y * TILE_SIZE)
-        Context:give(entity, 'sprite', sprite)
-
-        if map:isWall(x, y) then
-            Context:give(entity, 'wall')
-            Context:give(entity, 'layer', 1)
-        elseif map:isBox(x, y) then
-            Context:give(entity, 'pushable')
-            Context:give(entity, 'layer', 3)
-        elseif map:isGoal(x, y) then
-            Context:give(entity, 'goal')
-            Context:give(entity, 'layer', 2)
-        elseif map:isPlayer(x, y) then
-            Context:give(entity, 'layer', 4)
-            Context:give(entity, 'input')
-        elseif map:isDuplicator(x, y) then
-            Context:give(entity, 'duplicator')
-            Context:give(entity, 'layer', 2)
-        end
-    end
-
-    return map
-end
 
 function level:init()
     love.graphics.setFont(FONT)
@@ -96,17 +38,11 @@ function level:init()
     Context:registerComponents(Components)
     Context:registerSystems(Systems)
 
-    local maps  = loadDirectory(MAPS_PATH, {})
-    Context.map = loadMap(maps.sunrise)
-
-    local width, height = Context.map:getWidth() * TILE_SIZE, Context.map:getHeight() * TILE_SIZE
-    Context.camera:lookAt(width / 2, height / 2)
-
     Context.stats = {
         moves  = 0,
         time   = 0,
         pushes = 0,
-        level  = 0
+        level  = ''
     }
 
     Context:createGroup('boxes', 'position', 'pushable')
@@ -121,7 +57,20 @@ function level:init()
     Context:emit('init')
 end
 
-function level:enter(previous, ...)
+function level:enter(previous, level_path)
+    Context.map         = write.read(Context, level_path)
+    Context.stats.level = level_path
+
+    local width, height = Context.map:getWidth() * TILE_SIZE, Context.map:getHeight() * TILE_SIZE
+    Context.camera:lookAt((width / 2) + TILE_SIZE, (height / 2) + TILE_SIZE)
+
+    -- Resetting stats.
+    Context.stats = {
+        moves  = 0,
+        time   = 0,
+        pushes = 0,
+        level  = ''
+    }
 end
 
 function level:leave()
@@ -158,8 +107,6 @@ function level:keypressed(key, scancode, isrepeat)
 end
 
 function level:keyreleased(key, scancode)
-    if key == 'j' then write.serialize(Context) end
-    if key == 'k' then write.read(Context, 'test.lua') end
 end
 
 function level:quit()

@@ -95,7 +95,6 @@ function Editor:keyreleased(key, scancode)
         local data = write.tostring(self.map.data)
         local success, message = love.filesystem.write(LEVEL_NAME, data)
         if not success then error(message) end
-    elseif key == 'k' then
     end
 end
 
