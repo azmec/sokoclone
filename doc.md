@@ -48,3 +48,19 @@ Here's my highly intuitive and naive plan:
 5. On exit, reload that level using the new data.
 
 However, with this implementation, the player object is left and serialized at whatever position it was. This is (probably) fine and more of a user-detail than anything.
+
+### Cleanup
+This is a dated entry, but whatever.
+
+As it stands, we want the editor to create and save new levels, as well as *dynamically* resize the map on save. This seems simple enough; here's the plan:
+1. Allow the user to place tiles outside of the known map, but *not* in (x, 0) or (y, 0) regions.
+2. Any placement made outside of these bounds is placed in a new array:
+   ```lua
+   -- Assuming a level is 8x8. [3] is the tile type.
+   local out_of_bounds = { {9, 1, 2}, {9, 2, 3}, ... }
+   ```
+3. On save, we recalculate the size of the array to incorporate these new selections.
+
+There are some other things we should keep track of, like the highest *y* and *x* to quickly create a suitable 2D array.
+
+We're *always* justifying a level to the left and up, by nature of not allowing (x, 0) or (y, 0) placements.

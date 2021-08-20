@@ -4,10 +4,18 @@ local SimpleECS = require 'lib.ecs'
 local Camera    = require 'lib.hump.camera'
 local Baton     = require 'lib.baton'
 local Map       = require 'src.map'
+local ATLAS     = require 'src.atlas'
+local write     = require 'src.write'
 
-local write = require 'src.write'
+local TILE_SIZE   = ATLAS.TILE_SIZE
+local FONT_HEIGHT = ATLAS.FONT_HEIGHT
 
-local level = {}
+local MSG = {
+    LEVEL  = 'Level: ',
+    MOVES  = 'Moves: ',
+    PUSHES = 'Pushes: ',
+    TIME   = 'Time: ',
+}
 
 local Context  = SimpleECS.Context()
 Context.camera = Camera.new()
@@ -23,13 +31,10 @@ Context.input  = Baton.new({
     }
 })
 
-local TILE_SIZE    = 16
-
-local FONT        = love.graphics.newFont('assets/bitty.ttf', 16)
-local FONT_HEIGHT = FONT:getHeight('A')
+local level = {}
 
 function level:init()
-    love.graphics.setFont(FONT)
+    love.graphics.setFont(ATLAS.FONT)
 
     -- Retrieving all components and systems in single tables.
     local Components = SimpleECS.utils.packDirectory('src/components', {})
@@ -90,16 +95,16 @@ end
 function level:draw()
     Context:emit('draw')
 
-    local msg = "Level: " .. tostring(Context.stats.level)
+    local msg = MSG.LEVEL .. tostring(Context.stats.level)
     love.graphics.print(msg, 10, 10)
 
-    msg = "Moves: " .. tostring(Context.stats.moves)
+    msg = MSG.MOVES  .. tostring(Context.stats.moves)
     love.graphics.print(msg, 10, 10 + FONT_HEIGHT / 2)
 
-    msg = "Pushes: " .. tostring(Context.stats.pushes)
+    msg = MSG.PUSHES .. tostring(Context.stats.pushes)
     love.graphics.print(msg, 10, 10 + FONT_HEIGHT)
 
-    msg = "Time: " .. tostring(math.floor(Context.stats.time))
+    msg = MSG.TIME .. tostring(math.floor(Context.stats.time))
     love.graphics.print(msg, 10, 10 + FONT_HEIGHT * 1.5)
 end
 

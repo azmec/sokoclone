@@ -3,26 +3,13 @@
 -- it's super specific to the structure of this game.
 -- Don't take it as gospel for anything.
 
-local Map = require 'src.map'
+local Map   = require 'src.map'
+local ATLAS = require 'src.atlas'
+
+local TILES     = ATLAS.TILES
+local TILE_SIZE = ATLAS.TILE_SIZE
 
 local write = {}
-
-local TILE_SIZE    = 16
-local ATLAS        = love.graphics.newImage('assets/atlas.png')
-local ATLAS_WIDTH  = ATLAS:getWidth()
-local ATLAS_HEIGHT = ATLAS:getHeight()
-
--- IDs of tiles.
-local WALL       = 2
-local PLAYER     = 1
-local FLOOR      = 0
-local BOX        = 3
-local GOAL       = 4
-local DUPLICATOR = 5
-
-local function generateQuad(index)
-    return love.graphics.newQuad(index * TILE_SIZE, 0, TILE_SIZE, TILE_SIZE, ATLAS_WIDTH, ATLAS_HEIGHT)
-end
 
 local function levelToString(level)
     local width, height = #level[1], #level
@@ -71,41 +58,32 @@ write.serialize = function(Context, path)
         local cx, cy   = position.x / TILE_SIZE, position.y / TILE_SIZE
 
         if cx == 0 or cy == 0 then error('Position is 0.')
-        else level[cy][cx] = PLAYER end
+        else level[cy][cx] = TILES.PLAYER end
     end
     for entity in boxes:entities() do
         local position = Context:getComponent(entity, 'position')
         local cx, cy   = position.x / TILE_SIZE, position.y / TILE_SIZE
 
         if cx == 0 or cy == 0 then error('Position is 0.')
-        else level[cy][cx] = BOX end
+        else level[cy][cx] = TILES.BOX end
     end
     for entity in walls:entities() do
         local position = Context:getComponent(entity, 'position')
         local cx, cy   = position.x / TILE_SIZE, position.y / TILE_SIZE
 
         if cx == 0 or cy == 0 then error('Position is 0.')
-        else level[cy][cx] = WALL end
+        else level[cy][cx] = TILES.WALL end
     end
     for entity in duplicators:entities() do
         local position = Context:getComponent(entity, 'position')
         local cx, cy   = position.x / TILE_SIZE, position.y / TILE_SIZE
 
         if cx == 0 or cy == 0 then error('Position is 0.')
-        else level[cy][cx] = DUPLICATOR end
+        else level[cy][cx] = TILES.DUPLICATOR end
     end
 
     -- Take the level table and represent it as a string.
-    local data = "return {\n"
-    for y = 1, height do
-        data = data .. "    { "
-        for x = 1, width do
-            data = data .. string.format(" %i,", level[y][x])
-        end
-        data = data .. " },\n"
-    end
-
-    data = data .. "}"
+    local data = levelToString(level)
 
     -- Write it to wherever the identity is set.
     local success, message = love.filesystem.write('test.lua', data)
@@ -128,7 +106,7 @@ write.read = function(Context, path)
     local map = Map(level())
     for x, y in map:cells() do
         local entity = Context:entity()
-        local sprite = generateQuad(map:getValue(x, y))
+        local sprite = ATLAS:quad(map:getValue(x, y))
         Context:give(entity, 'position', x * TILE_SIZE, y * TILE_SIZE)
         Context:give(entity, 'sprite', sprite)
 
