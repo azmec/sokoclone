@@ -4,6 +4,14 @@
 local image = love.graphics.newImage('assets/atlas.png')
 local font  = love.graphics.newFont('assets/bitty.ttf', 16)
 
+local keys = function(t)
+    local res = {}
+    for k, v in pairs(t) do
+        res[v + 1] = k
+    end
+    return res
+end
+
 local ATLAS = {
     TILE_SIZE   = 16,
     IMAGE       = image,
@@ -21,6 +29,8 @@ ATLAS.TILES = {
     GOAL       = 4,
     DUPLICATOR = 5
 }
+
+ATLAS.NAMES = keys(ATLAS.TILES)
 
 --- Returns a new quad representing some sprite in the atlas.
 ATLAS.quad = function(self, index)
