@@ -1,51 +1,31 @@
 --- Level editor gamestate. Allows the user to edit levels 5head.
 
-local floor, min, max = math.floor, math.min, math.max
+local min, max    = math.min, math.max
+local sin, cos    = math.sin, math.cos
+local floor, ceil = math.floor, math.ceil
 
-local Map   = require 'src.map'
-local ATLAS = require 'src.atlas'
-local write = require 'src.write'
+local Camera = require 'lib.hump.camera'
+local Map    = require 'src.map'
+local ATLAS  = require 'src.atlas'
 
 local TILE_SIZE    = ATLAS.TILE_SIZE
 local FONT_HEIGHT  = ATLAS.FONT_HEIGHT
-local LEVEL_NAME   = ''
-local CURRENT_TILE = 0
 
--- Array of other arrays similar to {x, y, i, q}.
-local OUT_OF_BOUNDS = {}
+-- A level can only be as big as the screen is. This is a design choice;
+-- puzzles 'feel' better if I can see everything all the time.
+local LIMITS = { TOP = 0, LEFT = 0, RIGHT = 320, BOTTOM = 180}
 
-local mouse = {
-    x  = 0,
-    y  = 0,
-    dx = 0,
-    dy = 0
-}
+local camera = Camera.new()
+local mouse  = { x = 0, y = 0 } -- Used to calculate camera panning.
+local pmouse = { x = 0, y = 0 } -- Used to calculate cell and tile locations.
 
 local Editor = {}
-
-local function clamp(x, lo, hi) return min(max(lo, x), hi) end
 
 function Editor:init()
 end
 
 function Editor:enter(previous, level_path)
     love.graphics.setFont(ATLAS.FONT)
-
-    local level, message = love.filesystem.load(level_path)
-    if not level then error(message) end
-
-    LEVEL_NAME = level_path
-
-    self.map    = Map(level())
-    self.canvas = {}
-
-    for x, y in self.map:cells() do
-        local i    = self.map:getValue(x, y)
-        local quad = ATLAS:quad(i)
-
-        if not self.canvas[y] then self.canvas[y] = {} end
-        self.canvas[y][x] = quad
-    end
 end
 
 function Editor:leave()
@@ -55,77 +35,83 @@ function Editor:resume()
 end
 
 function Editor:update(delta)
+    -- Camera panning.
+
+    local new_mx, new_my = love.mouse.getPosition()
+    new_mx, new_my = new_mx / 4, new_my / 4 -- Scaling from 1080x720 to 320x180; TODO: Dynamically get scale.
+
+    if love.mouse.isDown(1) then
+        local angle  = camera.rot
+        local si, co = sin(angle), cos(angle)
+        local dx     = (-new_mx + mouse.x)
+        local dy     = (-new_my + mouse.y)
+        local cx, cy = camera:position()
+
+        camera:lookAt(cx + dx * co - dy * si, cy + dy * co + dx * si)
+    end
+
+    mouse.x, mouse.y = new_mx, new_my
 end
 
 function Editor:draw()
-    -- Draw tiles in original map structure.
-    for x, y in self.map:cells() do
-        local quad = self.canvas[y][x]
-        love.graphics.draw(ATLAS.IMAGE, quad, x * TILE_SIZE, y * TILE_SIZE)
-    end
+    local camx, camy = camera:position()
 
-    -- Draw tiles we've placed out of bounds that haven't been
-    -- written into the original map yet.
-    for i = 1, #OUT_OF_BOUNDS do
-        local point = OUT_OF_BOUNDS[i]
-        love.graphics.draw(ATLAS.IMAGE, point[4], point[1] * TILE_SIZE, point[2] * TILE_SIZE)
-    end
+    -- Drawing the grid.
+    love.graphics.push()
+    love.graphics.translate(320 / 2, 180 / 2)
+    love.graphics.translate(-camx, -camy)
 
-    love.graphics.rectangle('fill', mouse.x, mouse.y, 4, 4)
+    local x_lines = floor(180 / TILE_SIZE) -- Lines parallel to x axis.
+    local y_lines = floor(320 / TILE_SIZE) -- Lines parallel to y axis.
 
-    local msg = "Current level: " .. LEVEL_NAME
-    love.graphics.print(msg, 320 / 2, 10)
+    for y = 1, x_lines do love.graphics.line(0, y * TILE_SIZE, 320, y * TILE_SIZE) end
+    for x = 1, y_lines do love.graphics.line(x * TILE_SIZE, 0, x * TILE_SIZE, 180) end
 
-    local cx, cy = mouse.x / TILE_SIZE, mouse.y / TILE_SIZE
-    local msg = string.format('Mouse: (%i, %i)', cx, cy)
-    love.graphics.print(msg, 320 / 2, 20)
+    love.graphics.pop()
 
-    local msg = string.format('Selected tile: %i', CURRENT_TILE)
-    love.graphics.print(msg, 320 / 2, 20 + (FONT_HEIGHT / 2))
+    camera:attach(0, 0, 320, 180)
 
-    local msg = string.format('Save: j')
-    love.graphics.print(msg, 320 / 2, 20 + (FONT_HEIGHT * 1.5))
+    love.graphics.setColor(1, 0, 0)
+    love.graphics.rectangle('line', LIMITS.LEFT, LIMITS.TOP, LIMITS.RIGHT, LIMITS.BOTTOM)
 
-    local msg = string.format('Play: k')
-    love.graphics.print(msg, 320 / 2, 20 + (FONT_HEIGHT * 2))
+    camera:detach()
+
+    -- Drawing info/tool bar along the top.
+    love.graphics.setColor(0, 0, 0)
+    love.graphics.rectangle('fill', LIMITS.LEFT, LIMITS.TOP, LIMITS.RIGHT, 16)
+
+    love.graphics.setColor(1, 1, 1)
+    local msg = string.format('Camera Position: (%i, %i)', camx, camy)
+    love.graphics.print(msg, 10, 0)
+
+    local mx, my = camera:worldCoords(pmouse.x, pmouse.y)
+    mx, my       = mx + 480, my + 270 -- I have no clue why translations get scuffed.
+    local msg = string.format('World Mouse Position: (%i, %i)', mx, my)
+    --love.graphics.print(msg, 140, 0)
+
+    local cx, cy = floor(mx / TILE_SIZE) + 1, floor(my / TILE_SIZE) + 1
+    cx, cy       = min(max(1, cx), 20), min(max(1, cy), 11)
+    msg = string.format('Cell: (%i, %i)', cx, cy)
+    love.graphics.print(msg, 170, 0)
 end
 
 function Editor:keypressed(key, scancode, isrepeat)
 end
 
 function Editor:keyreleased(key, scancode)
-    if key == 'j' then
-        local data = write.resize(self.map.data, OUT_OF_BOUNDS)
-        data       = write.tostring(data)
-        print(data)
-        local success, message = love.filesystem.write(LEVEL_NAME, data)
-        if not success then error(message) end
-    end
 end
 
 function Editor:mousepressed(x, y, button)
 end
 
 function Editor:mousereleased(x, y, button)
-    local cx, cy = floor(x / TILE_SIZE), floor(y / TILE_SIZE)
-    if cx <= self.map:getWidth() and cy <= self.map:getHeight() then
-        self.map:setValue(cx, cy, CURRENT_TILE)
-        self.canvas[cy][cx] = ATLAS:quad(CURRENT_TILE)
-    elseif cx ~= 0 and cy ~= 0 then
-        OUT_OF_BOUNDS[#OUT_OF_BOUNDS + 1] = {cx, cy, CURRENT_TILE, ATLAS:quad(CURRENT_TILE)}
-    end
 end
 
 function Editor:mousemoved(x, y, dx, dy)
-    mouse.x, mouse.y, mouse.dx, mouse.dy = x, y, dx, dy
+    pmouse.x, pmouse.y = x, y
 end
 
 function Editor:wheelmoved(x, y)
-    local new = CURRENT_TILE + y
-    if new > 5 then new = 0
-    elseif new < 0 then new = 5 end
-
-    CURRENT_TILE = new
 end
 
 function Editor:quit()

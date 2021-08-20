@@ -45,6 +45,7 @@ local function resize(map, out_of_bounds)
     if mx == width and my == height then return map -- No dimensional change.
     elseif mx > width or my > height then           -- Level is bigger.
     else                                            -- Level must be smaller.
+    end
 
     -- Populate a new map with those boundaries.
     local new = {}
