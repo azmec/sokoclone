@@ -24,6 +24,13 @@ local camera = Camera.new()
 -- up and running later.
 local level  = { name = '[NO LEVEL]', data = {} }
 
+local function placeTile(x, y, i)
+    level.data[y][x] = {
+        id   = i,
+        quad = ATLAS:quad(i)
+    }
+end
+
 local Editor = {}
 
 function Editor:init()
@@ -32,8 +39,12 @@ function Editor:init()
     self.pmouse = { x = 0, y = 0 } -- Mouse coordinates from push translation.
     self.cmouse = { x = 0, y = 0 } -- Mouse location in tile/cell form.
 
+    self.pressed = false -- If the left mouse button is pressed.
+    self.time    = 0.0   -- How long the left mouse button was pressed.
+
     self.selected = 0                 -- Selected tile (see ATLAS.TILES)
     self.previous = { x = 0, y = 0 }  -- Previously placed tile (in cell units).
+    self.paint    = false             -- If we're 'painting'.
 
     for y = 1, LEVEL_HEIGHT do
         level.data[y] = {}
@@ -56,7 +67,6 @@ end
 
 function Editor:update(delta)
     -- Camera panning.
-
     local mouse          = self.mouse
     local new_mx, new_my = love.mouse.getPosition()
     new_mx, new_my = new_mx / 4, new_my / 4 -- Scaling from 1080x720 to 320x180; TODO: Dynamically get scale.
@@ -73,6 +83,14 @@ function Editor:update(delta)
     end
 
     mouse.x, mouse.y = new_mx, new_my
+
+    if love.mouse.isDown(1) then self.time = self.time + delta
+    else self.time = 0.0 end
+
+    if self.time > 0 and (self.cmouse.x ~= self.previous.x or self.cmouse.y ~= self.previous.y) then
+        placeTile(self.cmouse.x, self.cmouse.y, self.selected)
+        self.previous.x, self.previous.y = self.cmouse.x, self.cmouse.y
+    end
 end
 
 function Editor:draw()
@@ -162,10 +180,7 @@ end
 function Editor:mousereleased(x, y, button)
     local cmouse = self.cmouse
     if cmouse.x <= LEVEL_WIDTH and cmouse.y <= LEVEL_HEIGHT and button == 1 then
-        level.data[cmouse.y][cmouse.x] = {
-            id   = self.selected,
-            quad = ATLAS:quad(self.selected)
-        }
+        placeTile(cmouse.x, cmouse.y, self.selected)
         self.previous.x, self.previous.y = cmouse.x, cmouse.y
     end
 end
