@@ -28,6 +28,70 @@ local function levelToString(level)
     return data
 end
 
+local function resize(map, out_of_bounds)
+    local width, height = #map[1], #map
+    local mx, my        = width, height
+
+    -- Find the new boundaries of the map.
+    for i = 1, #out_of_bounds do
+        local point = out_of_bounds[i]
+        -- We'll assume the boundaries of a map are marked by walls.
+        if point[3] ~= TILES.WALLS then
+            if point[1] > mx then mx = point[1] end
+            if point[2] > my then my = point[2] end
+        end
+    end
+
+    if mx == width and my == height then return map -- No dimensional change.
+    elseif mx > width or my > height then           -- Level is bigger.
+    else                                            -- Level must be smaller.
+
+    -- Populate a new map with those boundaries.
+    local new = {}
+    for y = 1, my do
+        new[y] = {}
+        for x = 1, mx do
+            new[y][x] = 0
+        end
+    end
+
+    -- 'Copy' the given map into the new one.
+    for y = 1, height do
+        for x = 1, width do
+            new[y][x] = map[y][x]
+        end
+    end
+
+    -- 'Copy' out of bound tiles into the new one.
+    for i = 1, #out_of_bounds do
+        local point = out_of_bounds[i]
+        local x, y  = point[1], point[2]
+        local tile  = point[3]
+        new[y][x]   = tile
+    end
+
+    -- Cull floor tiles that are beyond the furthest known walls.
+    -- These are inaccessible to the player anyway, and they'd interfere
+    -- with interpreting the level's width and height.
+    -- It's possible for the *initial* known width and height to be beyond
+    -- the known walls, hence the need for this culling.
+
+    --[[
+        There's three cases for a level resize:
+            A. The level is *larger* than it previously was.
+            B. The level is *smaller* than it previously was.
+            C. The level remained the same.
+        In case C, we just exit and return exactly what we were given.
+        In A and B, though, we need to some work.
+
+        For A, it's as simple as finding the furthest *wall tile* and
+        considering that to be the bottomright corner of the level.
+
+        For B, we do the same thing, but instead `nil` array indices.
+    ]]
+    return new
+end
+
 --- Writes a Context's Sokoclone level data to the given file path.
 -- Touches a new file if it doesn't exist already.
 write.serialize = function(Context, path)
@@ -132,5 +196,6 @@ write.read = function(Context, path)
 end
 
 write.tostring = levelToString
+write.resize    = resize
 
 return write

@@ -11,6 +11,9 @@ local FONT_HEIGHT  = ATLAS.FONT_HEIGHT
 local LEVEL_NAME   = ''
 local CURRENT_TILE = 0
 
+-- Array of other arrays similar to {x, y, i, q}.
+local OUT_OF_BOUNDS = {}
+
 local mouse = {
     x  = 0,
     y  = 0,
@@ -55,9 +58,17 @@ function Editor:update(delta)
 end
 
 function Editor:draw()
+    -- Draw tiles in original map structure.
     for x, y in self.map:cells() do
         local quad = self.canvas[y][x]
         love.graphics.draw(ATLAS.IMAGE, quad, x * TILE_SIZE, y * TILE_SIZE)
+    end
+
+    -- Draw tiles we've placed out of bounds that haven't been
+    -- written into the original map yet.
+    for i = 1, #OUT_OF_BOUNDS do
+        local point = OUT_OF_BOUNDS[i]
+        love.graphics.draw(ATLAS.IMAGE, point[4], point[1] * TILE_SIZE, point[2] * TILE_SIZE)
     end
 
     love.graphics.rectangle('fill', mouse.x, mouse.y, 4, 4)
@@ -84,7 +95,9 @@ end
 
 function Editor:keyreleased(key, scancode)
     if key == 'j' then
-        local data = write.tostring(self.map.data)
+        local data = write.resize(self.map.data, OUT_OF_BOUNDS)
+        data       = write.tostring(data)
+        print(data)
         local success, message = love.filesystem.write(LEVEL_NAME, data)
         if not success then error(message) end
     end
@@ -98,6 +111,8 @@ function Editor:mousereleased(x, y, button)
     if cx <= self.map:getWidth() and cy <= self.map:getHeight() then
         self.map:setValue(cx, cy, CURRENT_TILE)
         self.canvas[cy][cx] = ATLAS:quad(CURRENT_TILE)
+    elseif cx ~= 0 and cy ~= 0 then
+        OUT_OF_BOUNDS[#OUT_OF_BOUNDS + 1] = {cx, cy, CURRENT_TILE, ATLAS:quad(CURRENT_TILE)}
     end
 end
 
