@@ -64,3 +64,17 @@ As it stands, we want the editor to create and save new levels, as well as *dyna
 There are some other things we should keep track of, like the highest *y* and *x* to quickly create a suitable 2D array.
 
 We're *always* justifying a level to the left and up, by nature of not allowing (x, 0) or (y, 0) placements.
+
+### Undo / Redos
+There's generally two ways of doing undos/redos:
+1. Saving a previous version of the level in memory and loading those states when needed.
+2. Recording a list of actions and performing the *inverse* of those actions when needed.
+
+In the first approach, we can *get away with* keeping states in memory just because of how small our levels are, but it sounds boring. So, we'll do the second approach.
+
+Here are the requirements:
+1. Qualify what *is* and *is not* an action and their inverse.
+2. For every action taken, record it in a stack.
+3. On [Ctrl-Z], perform the inverse of that action and pop it off the stack.
+
+For things like tile placing, it's trivial. Something like resizing the map may pose other challenges.

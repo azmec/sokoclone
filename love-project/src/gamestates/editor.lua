@@ -25,26 +25,51 @@ local camera = Camera.new()
 local level  = { name = '[NO LEVEL]', data = {} }
 
 local function placeTile(x, y, i)
+    print(
+        string.format('Placing %s at (%i, %i).', ATLAS.NAMES[i + 1], x, y)
+    )
     level.data[y][x] = {
         id   = i,
         quad = ATLAS:quad(i)
     }
 end
 
+local function printAction(t)
+    local action = t.action
+    print(
+        string.format('Placed %s at (%i, %i).',
+            ATLAS.NAMES[action.id + 1],
+            action.x, action.y)
+    )
+end
+
+local function printInverse(t)
+    local action, inverse = t.action, t.inverse
+    print(
+        string.format('Replaced %s with %s at (%i, %i).',
+            ATLAS.NAMES[action.id + 1],
+            ATLAS.NAMES[inverse.id + 1],
+            action.x, action.y)
+    )
+end
+
 local Editor = {}
 
 function Editor:init()
     -- Global editor data. If I want it, I get it.
-    self.mouse  = { x = 0, y = 0 } -- Used to calculate camera panning.
-    self.pmouse = { x = 0, y = 0 } -- Mouse coordinates from push translation.
-    self.cmouse = { x = 0, y = 0 } -- Mouse location in tile/cell form.
+    self.mouse  = { x = 0, y = 0 }    -- Used to calculate camera panning.
+    self.pmouse = { x = 0, y = 0 }    -- Mouse coordinates from push translation.
+    self.cmouse = { x = 0, y = 0 }    -- Mouse location in tile/cell form.
 
-    self.pressed = false -- If the left mouse button is pressed.
-    self.time    = 0.0   -- How long the left mouse button was pressed.
+    self.pressed = false              -- If the left mouse button is pressed.
+    self.time    = 0.0                -- How long the left mouse button was pressed.
 
     self.selected = 0                 -- Selected tile (see ATLAS.TILES)
     self.previous = { x = 0, y = 0 }  -- Previously placed tile (in cell units).
     self.paint    = false             -- If we're 'painting'.
+
+    self.undo = {}                    -- Stack of actions we can undo.
+    self.redo = {}                    -- Stack of actions we can redo.
 
     for y = 1, LEVEL_HEIGHT do
         level.data[y] = {}
@@ -88,8 +113,13 @@ function Editor:update(delta)
     else self.time = 0.0 end
 
     if self.time > 0 and (self.cmouse.x ~= self.previous.x or self.cmouse.y ~= self.previous.y) then
-        placeTile(self.cmouse.x, self.cmouse.y, self.selected)
-        self.previous.x, self.previous.y = self.cmouse.x, self.cmouse.y
+        cmouse, selected = self.cmouse, self.selected
+        self.previous.x, self.previous.y = cmouse.x, cmouse.y
+        self.undo[#self.undo + 1] = {
+            action  = { x = cmouse.x, y = cmouse.y, id = selected },
+            inverse = { x = cmouse.x, y = cmouse.y, id = level.data[cmouse.y][cmouse.x].id}
+        }
+        placeTile(cmouse.x, cmouse.y, selected)
     end
 end
 
@@ -172,6 +202,24 @@ function Editor:keypressed(key, scancode, isrepeat)
 end
 
 function Editor:keyreleased(key, scancode)
+    -- Listening for special keyboard combinations.
+    if love.keyboard.isDown('lctrl') then
+        if     key == 'z' and #self.undo > 0 then  -- [Ctrl+Z] = UNDO
+            local recent  = self.undo[#self.undo]  -- Get most recent action.
+            local inverse = recent.inverse         -- Get its inverse.
+            self.redo[#self.redo + 1] = recent     -- Push it onto redo stack.
+            placeTile(inverse.x, inverse.y, inverse.id)
+
+            self.undo[#self.undo] = nil            -- Remove action from undo stack.
+        elseif key == 'y' and #self.redo > 0 then  -- [Ctrl+Y] = REDO
+            local recent = self.redo[#self.redo]   -- Get most recent undo.
+            local action = recent.action           -- Get the original action.
+            self.undo[#self.undo + 1] = recent     -- Push it onto undo stack.
+            placeTile(action.x, action.y, action.id)
+
+            self.redo[#self.redo] = nil            -- Remove action from redo stack.
+        end
+    end
 end
 
 function Editor:mousepressed(x, y, button)
@@ -179,9 +227,13 @@ end
 
 function Editor:mousereleased(x, y, button)
     local cmouse = self.cmouse
-    if cmouse.x <= LEVEL_WIDTH and cmouse.y <= LEVEL_HEIGHT and button == 1 then
-        placeTile(cmouse.x, cmouse.y, self.selected)
+    if cmouse.x <= LEVEL_WIDTH and cmouse.y <= LEVEL_HEIGHT and button == 1 and self.time < 0.02 then
         self.previous.x, self.previous.y = cmouse.x, cmouse.y
+        self.undo[#self.undo + 1] = {
+            action  = { x = cmouse.x, y = cmouse.y, id = self.selected },
+            inverse = { x = cmouse.x, y = cmouse.y, id = level.data[cmouse.y][cmouse.x].id}
+        }
+        placeTile(cmouse.x, cmouse.y, self.selected)
     end
 end
 
