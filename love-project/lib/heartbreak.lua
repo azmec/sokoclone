@@ -32,4 +32,6 @@ heartbreak.ensure = function(argument, expected, index)
     )
 end
 
+heartbreak.getUserErrorLevel = getUserErrorLevel
+
 return heartbreak
