@@ -61,7 +61,7 @@ end
 
 function love.keyreleased(key, scancode)
     if key == 'space' then Gamestate.switch(gamestates.editor, 'test.lua')
-    elseif key == 'k' then Gamestate.switch(gamestates.level, 'test.lua') end
+    elseif key == 'escape' then Gamestate.switch(gamestates.level, 'test.lua') end
     Gamestate.keyreleased(key, scancode)
 end
 

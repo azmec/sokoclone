@@ -4,9 +4,12 @@ local min, max    = math.min, math.max
 local sin, cos    = math.sin, math.cos
 local floor, ceil = math.floor, math.ceil
 
-local Camera = require 'lib.hump.camera'
-local Map    = require 'src.map'
-local ATLAS  = require 'src.atlas'
+local Camera    = require 'lib.hump.camera'
+local Gamestate = require 'lib.hump.gamestate'
+local Map       = require 'src.map'
+local ATLAS     = require 'src.atlas'
+
+local write_gamestate = require 'src.gamestates.write'
 
 local TILES        = ATLAS.TILES
 local TILE_SIZE    = ATLAS.TILE_SIZE
@@ -77,6 +80,8 @@ function Editor:init()
             level.data[y][x] = {id = TILES.FLOOR, quad = ATLAS:quad(TILES.FLOOR)}
         end
     end
+
+    self.level = level
 end
 
 function Editor:enter(previous, level_path)
@@ -183,11 +188,8 @@ function Editor:draw()
     msg = ('Selected Tile: ' .. ATLAS.NAMES[self.selected + 1])
     love.graphics.print(msg, 120, 0)
 
-    msg = ('Save: [c]')
-    love.graphics.print(msg, 230, 0)
-
-    msg = ('Play: [v]')
-    love.graphics.print(msg, 280, 0)
+    msg = ('Play: [ESC]')
+    love.graphics.print(msg, 270, 0)
 
     -- Drawing the level name along the bottom.
     love.graphics.setColor(0, 0, 0)
@@ -218,7 +220,7 @@ function Editor:keyreleased(key, scancode)
             placeTile(action.x, action.y, action.id)
 
             self.redo[#self.redo] = nil            -- Remove action from redo stack.
-        end
+        elseif key == 's' then Gamestate.push(write_gamestate) end
     end
 end
 

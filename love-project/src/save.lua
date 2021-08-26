@@ -37,6 +37,8 @@ local function groupToTile(Context, group, tile, level)
                            cx, cy),
             hb.getUserErrorLevel()
         )
+        end
+
         level[cy][cx] = tile
     end
 
@@ -98,7 +100,7 @@ end
 Save.ioWrite = function(data, path)
     hb.ensure(data, 'string', 1) hb.ensure(path, 'string', 2)
 
-    local file = io.open('love-project' .. path, 'w')
+    local file = io.open('love-project/' .. path, 'w')
     file:write(data) file:flush() file:close()
 end
 
