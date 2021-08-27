@@ -117,7 +117,7 @@ end
 Save.read = function(path)
     hb.ensure(path, 'string', 1)
 
-    local chunk, message = love.filesystem.read(path)
+    local chunk, message = love.filesystem.load(path)
     if not chunk then error(message) end
 
     local level = chunk()

@@ -8,6 +8,7 @@ local Camera    = require 'lib.hump.camera'
 local Gamestate = require 'lib.hump.gamestate'
 local Map       = require 'src.map'
 local ATLAS     = require 'src.atlas'
+local save      = require 'src.save'
 
 local write_gamestate = require 'src.gamestates.write'
 
@@ -56,6 +57,12 @@ local function printInverse(t)
     )
 end
 
+local function getFileName(file)
+    local file_name = file:match("[^/]*.lua$")
+    return file_name:sub(0, #file_name - 4)
+end
+
+
 local Editor = {}
 
 function Editor:init()
@@ -87,6 +94,16 @@ end
 function Editor:enter(previous, level_path)
     love.graphics.setFont(ATLAS.FONT)
     love.graphics.setBackgroundColor(1, 1, 0)
+
+    local level = self.level
+    local l     = save.read(level_path)
+    for y = 1, #l do
+        for x = 1, #l[1] do
+            level.data[y][x] = { id = l[y][x], quad = ATLAS:quad(l[y][x]) }
+        end
+    end
+
+    level.name = getFileName(level_path)
 end
 
 function Editor:leave()

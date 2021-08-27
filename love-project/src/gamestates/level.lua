@@ -31,6 +31,11 @@ Context.input  = Baton.new({
     }
 })
 
+local function getFileName(file)
+    local file_name = file:match("[^/]*.lua$")
+    return file_name:sub(0, #file_name - 4)
+end
+
 local level = {}
 
 function level:init()
@@ -70,12 +75,11 @@ function level:enter(previous, level_path)
     Context.camera:lookAt((width / 2) + TILE_SIZE, (height / 2) + TILE_SIZE)
 
     -- Resetting stats.
-    Context.stats = {
-        moves  = 0,
-        time   = 0,
-        pushes = 0,
-        level  = ''
-    }
+    local stats  = Context.stats
+    stats.moves  = 0
+    stats.time   = 0
+    stats.pushes = 0
+    stats.level  = getFileName(level_path)
 end
 
 function level:leave()

@@ -34,6 +34,7 @@ local Write = {}
 
 function Write:enter(previous)
     self.from = previous -- Record the previous state.
+    input     = previous.level.name
     love.graphics.setFont(ATLAS.FONT)
 end
 
@@ -78,7 +79,7 @@ function Write:keyreleased(key, scancode)
 
         -- Convert newly constructed data to string.
         data = save.levelToString(data)
-        save.ioWrite(data, input .. EXTENSION)
+        save.ioWrite(data, 'src/maps/' .. input .. EXTENSION)
 
         Gamestate.pop()
     elseif isValid(key) and #input <= 28 then

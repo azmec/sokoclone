@@ -5,6 +5,8 @@ local gamestates = require 'src.gamestates'
 
 local WINDOW_SCALE = 4 -- Window multiplier.
 
+local current_level_path = '/src/maps/clone.lua'
+
 local function loadDirectory(path, t)
     local info = love.filesystem.getInfo(path)
     if info == nil or info.type ~= 'directory' then
@@ -40,7 +42,7 @@ function love.load()
                      })
 
     local levels = loadDirectory('src/maps', {})
-    Gamestate.switch(gamestates.level, 'test.lua')
+    Gamestate.switch(gamestates.level, current_level_path)
 end
 
 function love.update(delta)
@@ -60,8 +62,8 @@ function love.keypressed(key, scancode, isrepeat)
 end
 
 function love.keyreleased(key, scancode)
-    if key == 'space' then Gamestate.switch(gamestates.editor, 'test.lua')
-    elseif key == 'escape' then Gamestate.switch(gamestates.level, 'test.lua') end
+    if key == 'space' then Gamestate.switch(gamestates.editor, current_level_path)
+    elseif key == 'escape' then Gamestate.switch(gamestates.level, current_level_path) end
     Gamestate.keyreleased(key, scancode)
 end
 
