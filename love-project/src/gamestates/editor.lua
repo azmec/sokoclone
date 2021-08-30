@@ -118,7 +118,9 @@ function Editor:update(delta)
     local new_mx, new_my = love.mouse.getPosition()
     new_mx, new_my = new_mx / 4, new_my / 4 -- Scaling from 1080x720 to 320x180; TODO: Dynamically get scale.
 
-    if love.mouse.isDown(3) then
+    -- We look for both the [Wheel Click] and [Ctrl]+[Left Click] for panning.
+    if love.mouse.isDown(3)
+    or (love.mouse.isDown(1) and love.keyboard.isDown('lctrl')) then
         local angle  = camera.rot
         local si, co = sin(angle), cos(angle)
         local dx     = (-new_mx + mouse.x)
