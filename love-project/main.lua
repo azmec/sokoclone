@@ -5,7 +5,7 @@ local gamestates = require 'src.gamestates'
 
 local WINDOW_SCALE = 4 -- Window multiplier.
 
-local current_level_path = '/src/maps/clone.lua'
+local current_level_path = 'src/maps/clone.lua'
 
 local function loadDirectory(path, t)
     local info = love.filesystem.getInfo(path)

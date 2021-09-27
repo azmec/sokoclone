@@ -1,4 +1,8 @@
---- Level editor gamestate. Allows the user to edit levels 5head.
+--[[ 
+    Level editor gamestate.
+    SOURCE: editor.lua
+    Gamestate dedicated to handling level editor processing and drawing. 
+]]
 
 local min, max    = math.min, math.max
 local sin, cos    = math.sin, math.cos

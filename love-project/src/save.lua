@@ -74,6 +74,36 @@ Save.contextToLevel = function(Context, width, height)
     return level
 end
 
+--- Loads a level into a Context.
+Save.levelToContext = function(Context, path)
+    hb.ensure(Context, 'table', 1) hb.ensure(path, 'string', 2)
+
+    local chunk, message = love.filesystem.load(path)
+    if not chunk then error(message) end
+
+    local level = chunk()
+
+    local width, height = #level[1], #level
+    for y = 1, height do
+        for x = 1, width do
+            local tile = level[y][x]
+            local entity = Context:entity()
+            Context:give(entity, 'position', x * TILE_SIZE, y * TILE_SIZE)
+            Context:give(entity, 'sprite', ATLAS:quad(tile))
+
+            -- If it's a floor we don't need to do anything, so skip it.
+            if tile == TILES.WALL           then Context:give(entity, 'wall')
+            elseif tile == TILES.BOX        then Context:give(entity, 'pushable')
+            elseif tile == TILES.GOAL       then Context:give(entity, 'goal')
+            elseif tile == TILES.DUPLICATOR then Context:give(entity, 'duplicator')
+            elseif tile == TILES.PLAYER     then Context:give(entity, 'input')
+            end
+        end
+    end
+
+    return level
+end
+
 --- Converts a level into a string.
 -- We assume the level is of Sokoclone format.
 Save.levelToString = function(level)

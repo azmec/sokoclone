@@ -5,7 +5,7 @@ local Camera    = require 'lib.hump.camera'
 local Baton     = require 'lib.baton'
 local Map       = require 'src.map'
 local ATLAS     = require 'src.atlas'
-local write     = require 'src.write'
+local save      = require 'src.save'
 
 local TILE_SIZE   = ATLAS.TILE_SIZE
 local FONT_HEIGHT = ATLAS.FONT_HEIGHT
@@ -68,10 +68,8 @@ function level:init()
 end
 
 function level:enter(previous, level_path)
-    Context.map         = write.read(Context, level_path)
-    Context.stats.level = level_path
-
-    local width, height = Context.map:getWidth() * TILE_SIZE, Context.map:getHeight() * TILE_SIZE
+    Context.map         = save.levelToContext(Context, level_path)
+    local width, height = #Context.map[1] * TILE_SIZE, #Context.map * TILE_SIZE
     Context.camera:lookAt((width / 2) + TILE_SIZE, (height / 2) + TILE_SIZE)
 
     -- Resetting stats.
